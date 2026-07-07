@@ -1,7 +1,10 @@
 package game
 
+import mapset "github.com/deckarep/golang-set/v2"
+
 type Game struct {
-	Words map[string]struct{}
+	Words   mapset.Set[string]
+	Letters mapset.Set[rune]
 }
 
 type GameModifier interface {
@@ -12,10 +15,24 @@ type GameModifier interface {
 func (G Game) AddWords(words []string) int {
 	count := 0
 	for _, word := range words {
-		if _, exists := G.Words[word]; !exists {
-			G.Words[word] = struct{}{}
+		if exists := G.Words.Contains(word); !exists && G.isValidWord(word) {
+			G.Words.Add(word)
 			count++
 		}
 	}
 	return count
+}
+
+func (G Game) isValidWord(word string) bool {
+	if len(word) < 4 {
+		return false
+	}
+
+	for _, letter := range word {
+		if !G.Letters.Contains(letter) {
+			return false
+		}
+	}
+
+	return true
 }
