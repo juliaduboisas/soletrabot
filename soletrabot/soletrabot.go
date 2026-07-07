@@ -93,6 +93,19 @@ func main() {
 		return nil
 	}, th.CommandEqual("get"))
 
+	// '/setup' handler
+	bh.Handle(func(ctx *th.Context, update telego.Update) error {
+		letters := []rune(strings.Split(update.Message.Text, "\n")[1])
+		setupLetters := game.Setup(letters)
+
+		// Send message
+		_, _ = bot.SendMessage(ctx, tu.Messagef(
+			tu.ID(update.Message.Chat.ID),
+			"%v", string(setupLetters),
+		))
+		return nil
+	}, th.CommandEqual("setup"))
+
 	// Start server for receiving requests from the Telegram
 	go func() {
 		_ = http.ListenAndServe(":8080", mux)
