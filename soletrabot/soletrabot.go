@@ -8,8 +8,9 @@ import (
 	"os"
 	"strings"
 
-	"example.com/game"
+	"example.com/soletrabot/game"
 
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/joho/godotenv"
 	"github.com/mymmrac/telego"
 	th "github.com/mymmrac/telego/telegohandler"
@@ -52,7 +53,7 @@ func main() {
 
 	bh, _ := th.NewBotHandler(bot, updates)
 
-	game := game.Game{Words: make(map[string]struct{})}
+	game := game.Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet[rune]()}
 
 	// '/start' handler
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
