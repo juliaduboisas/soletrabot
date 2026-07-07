@@ -1,0 +1,72 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
+	"github.com/mymmrac/telego"
+	th "github.com/mymmrac/telego/telegohandler"
+	tu "github.com/mymmrac/telego/telegoutil"
+)
+
+func main() {
+	ctx := context.Background()
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	botToken := os.Getenv("TOKEN")
+	webhookURL := os.Getenv("WEBHOOK_URL")
+
+	// Note: Please keep in mind that default logger may expose sensitive information,
+	// use in development only
+	bot, err := telego.NewBot(botToken, telego.WithDefaultDebugLogger())
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// Set up a webhook on Telegram side
+	_ = bot.SetWebhook(ctx, &telego.SetWebhookParams{
+		URL:         webhookURL,
+		SecretToken: bot.SecretToken(),
+	})
+
+	// Receive information about webhook
+	info, _ := bot.GetWebhookInfo(ctx)
+	fmt.Printf("Webhook Info: %+v\n", info)
+
+	// Create http serve mux
+	mux := http.NewServeMux()
+
+	// Get an update channel from webhook.
+	// (more on configuration in examples/updates_webhook/main.go)
+	updates, _ := bot.UpdatesViaWebhook(ctx, telego.WebhookHTTPServeMux(mux, "/bot", bot.SecretToken()))
+
+	bh, _ := th.NewBotHandler(bot, updates)
+
+	// '/start' handler
+	bh.Handle(func(ctx *th.Context, update telego.Update) error {
+		// Send message
+		_, _ = bot.SendMessage(ctx, tu.Messagef(
+			tu.ID(update.Message.Chat.ID),
+			"Hello %s!", update.Message.From.FirstName,
+		))
+		return nil
+	}, th.CommandEqual("start"))
+
+	// Start server for receiving requests from the Telegram
+	go func() {
+		_ = http.ListenAndServe(":8080", mux)
+	}()
+
+	// Stop handling updates
+	defer func() { _ = bh.Stop() }()
+
+	// Start handling updates
+	_ = bh.Start()
+}
