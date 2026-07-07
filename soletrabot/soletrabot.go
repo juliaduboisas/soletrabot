@@ -66,14 +66,17 @@ func main() {
 
 	// '/add' handler
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
-
-		wordsToAdd := strings.Split(update.Message.Text, "\n")
+		wordsInText := strings.Split(update.Message.Text, "\n")
+		var wordsToAdd []string
+		for i := 1; i < len(wordsInText); i++ {
+			wordsToAdd = append(wordsToAdd, wordsInText[i])
+		}
 		addedCount := game.AddWords(wordsToAdd)
 
 		// Send message
 		_, _ = bot.SendMessage(ctx, tu.Messagef(
 			tu.ID(update.Message.Chat.ID),
-			"%s added %v", update.Message.From.FirstName, addedCount,
+			"%s added %v new words", update.Message.From.FirstName, addedCount,
 		))
 		return nil
 	}, th.CommandEqual("add"))
