@@ -6,6 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
+
+	"example.com/game"
 
 	"github.com/joho/godotenv"
 	"github.com/mymmrac/telego"
@@ -49,6 +52,8 @@ func main() {
 
 	bh, _ := th.NewBotHandler(bot, updates)
 
+	game := game.Game{Words: make(map[string]struct{})}
+
 	// '/start' handler
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
 		// Send message
@@ -58,6 +63,20 @@ func main() {
 		))
 		return nil
 	}, th.CommandEqual("start"))
+
+	// '/add' handler
+	bh.Handle(func(ctx *th.Context, update telego.Update) error {
+
+		wordsToAdd := strings.Split(update.Message.Text, "\n")
+		addedCount := game.AddWords(wordsToAdd)
+
+		// Send message
+		_, _ = bot.SendMessage(ctx, tu.Messagef(
+			tu.ID(update.Message.Chat.ID),
+			"%s added %v", update.Message.From.FirstName, addedCount,
+		))
+		return nil
+	}, th.CommandEqual("add"))
 
 	// Start server for receiving requests from the Telegram
 	go func() {

@@ -3,6 +3,7 @@ module example.com/soletrabot
 go 1.26.4
 
 require (
+	example.com/game v0.0.0-00010101000000-000000000000
 	github.com/joho/godotenv v1.5.1
 	github.com/mymmrac/telego v1.10.0
 )
@@ -23,3 +24,5 @@ require (
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 )
+
+replace example.com/game => ../game
