@@ -37,3 +37,19 @@ func TestWordValidation(t *testing.T) {
 		t.Errorf("'hell' should be a valid word")
 	}
 }
+
+func TestSetup(t *testing.T) {
+	// arrange
+	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o')}
+
+	// act
+	game.Setup([]rune{'a', 'b'})
+
+	// assert
+	if !game.Letters.Contains('a', 'b') {
+		t.Errorf("Setup should have included 'a' and 'b'")
+	}
+	if game.Letters.Contains('h') {
+		t.Errorf("Setup should have removed 'h'")
+	}
+}

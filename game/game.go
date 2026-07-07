@@ -22,6 +22,13 @@ func (G Game) GetWords() []string {
 	return G.Words.ToSlice()
 }
 
+func (G Game) Setup(letters []rune) {
+	G.Letters.Clear()
+	for _, letter := range letters {
+		G.Letters.Add(letter)
+	}
+}
+
 func (G Game) isValidWord(word string) bool {
 	if len(word) < 4 {
 		return false
