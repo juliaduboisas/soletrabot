@@ -7,11 +7,6 @@ type Game struct {
 	Letters mapset.Set[rune]
 }
 
-type GameModifier interface {
-	AddWords(words []string)
-	GetWords() []string
-}
-
 func (G Game) AddWords(words []string) int {
 	count := 0
 	for _, word := range words {
@@ -21,6 +16,10 @@ func (G Game) AddWords(words []string) int {
 		}
 	}
 	return count
+}
+
+func (G Game) GetWords() []string {
+	return G.Words.ToSlice()
 }
 
 func (G Game) isValidWord(word string) bool {

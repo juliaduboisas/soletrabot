@@ -82,6 +82,17 @@ func main() {
 		return nil
 	}, th.CommandEqual("add"))
 
+	// '/get' handler
+	bh.Handle(func(ctx *th.Context, update telego.Update) error {
+		words := game.GetWords()
+		// Send message
+		_, _ = bot.SendMessage(ctx, tu.Messagef(
+			tu.ID(update.Message.Chat.ID),
+			"%s", strings.Join(words, "\n"),
+		))
+		return nil
+	}, th.CommandEqual("get"))
+
 	// Start server for receiving requests from the Telegram
 	go func() {
 		_ = http.ListenAndServe(":8080", mux)
