@@ -53,7 +53,7 @@ func main() {
 
 	bh, _ := th.NewBotHandler(bot, updates)
 
-	game := game.Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet[rune]()}
+	game := game.Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet[rune](), PlayerWords: make(map[string]mapset.Set[string])}
 
 	// '/start' handler
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
