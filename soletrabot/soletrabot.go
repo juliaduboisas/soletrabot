@@ -106,6 +106,18 @@ func main() {
 		return nil
 	}, th.CommandEqual("setup"))
 
+	// '/diff' handler
+	bh.Handle(func(ctx *th.Context, update telego.Update) error {
+		diff := strings.Join(game.GetDifference(update.Message.From.Username), "\n")
+
+		// Send message
+		_, _ = bot.SendMessage(ctx, tu.Messagef(
+			tu.ID(update.Message.Chat.ID),
+			"%s", diff,
+		))
+		return nil
+	}, th.CommandEqual("diff"))
+
 	// Start server for receiving requests from the Telegram
 	go func() {
 		_ = http.ListenAndServe(":8080", mux)
