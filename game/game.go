@@ -8,29 +8,34 @@ type Game struct {
 	PlayerWords map[string]mapset.Set[string]
 }
 
-func (G Game) AddWords(words []string, player string) int {
-	playerWords, exists := G.PlayerWords[player]
+func (G *Game) AddWords(words []string, player string) int {
+	_, exists := G.PlayerWords[player]
 	if !exists {
-		playerWords = mapset.NewSet[string]()
-		G.PlayerWords[player] = playerWords
+		G.PlayerWords[player] = mapset.NewSet[string]()
 	}
 
 	count := 0
 	for _, word := range words {
+		// add word for player
+		if exists := G.PlayerWords[player].Contains(word); !exists && G.isValidWord(word) {
+			G.PlayerWords[player].Add(word)
+		}
+
+		// add word globally
 		if exists := G.Words.Contains(word); !exists && G.isValidWord(word) {
 			G.Words.Add(word)
-			playerWords.Add(word)
+			G.PlayerWords[player].Add(word)
 			count++
 		}
 	}
 	return count
 }
 
-func (G Game) GetWords() []string {
+func (G *Game) GetWords() []string {
 	return G.Words.ToSlice()
 }
 
-func (G Game) Setup(letters []rune) []rune {
+func (G *Game) Setup(letters []rune) []rune {
 	G.Letters.Clear()
 	for _, letter := range letters {
 		G.Letters.Add(letter)
@@ -38,7 +43,7 @@ func (G Game) Setup(letters []rune) []rune {
 	return letters
 }
 
-func (G Game) GetDifference(user string) []string {
+func (G *Game) GetDifference(user string) []string {
 	playerWords, exists := G.PlayerWords[user]
 	if !exists {
 		return G.GetWords()
@@ -48,7 +53,7 @@ func (G Game) GetDifference(user string) []string {
 	return difference.ToSlice()
 }
 
-func (G Game) isValidWord(word string) bool {
+func (G *Game) isValidWord(word string) bool {
 	if len(word) < 4 {
 		return false
 	}

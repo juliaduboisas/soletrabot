@@ -46,12 +46,14 @@ func TestGameDiff(t *testing.T) {
 	game.AddWords([]string{"hello", "hollow", "howl"}, "teka")
 	game.AddWords([]string{"hello"}, "veter")
 
+	difference := mapset.NewSet(game.GetDifference("veter")...)
+
 	// assert
-	if !game.PlayerWords["teka"].Contains("hello") {
-		t.Errorf("Expected word 'hello' not found in player words")
+	if !difference.Contains("hollow", "howl") {
+		t.Errorf("Difference between 'teka' words and global should be 'hollow' and 'howl'. Current diff: %v", difference)
 	}
-	if game.PlayerWords["teka"].Contains("world") {
-		t.Errorf("'world' should not be in player words list")
+	if difference.Contains("hello") {
+		t.Errorf("'hello' should not be in 'veter' difference. Current diff: %v", difference)
 	}
 }
 
