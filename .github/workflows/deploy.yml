@@ -37,6 +37,8 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}
           source: "soletrabot"
           target: "/home/ubuntu/soletrabot/"
+          strip_components: 1
+          overwrite: true
 
       - name: Restart service
         uses: appleboy/ssh-action@v1.2.0
