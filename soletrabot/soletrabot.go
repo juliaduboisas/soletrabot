@@ -6,8 +6,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"slices"
 	"strings"
+	"syscall"
+	"time"
 
 	"example.com/soletrabot/game"
 
@@ -19,7 +22,9 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -168,13 +173,49 @@ func main() {
 	}, th.CommandEqual("sync"))
 
 	// Start server for receiving requests from the Telegram
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
+
 	go func() {
-		_ = http.ListenAndServe(":8080", mux)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
 	}()
 
 	// Stop handling updates
 	defer func() { _ = bh.Stop() }()
 
 	// Start handling updates
-	_ = bh.Start()
+	go func() {
+		if err := bh.Start(); err != nil {
+			log.Println(err)
+		}
+	}()
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+
+	<-sig
+
+	log.Println("Shutting down...")
+
+	cancel()
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+
+	_ = bh.Stop()
+
+	webhook_del_err := bot.DeleteWebhook(shutdownCtx, &telego.DeleteWebhookParams{
+		DropPendingUpdates: false,
+	})
+	if webhook_del_err != nil {
+		log.Println("failed to delete webhook:", err)
+	}
+
+	_ = server.Shutdown(shutdownCtx)
+
+	log.Println("Shutdown complete.")
 }
