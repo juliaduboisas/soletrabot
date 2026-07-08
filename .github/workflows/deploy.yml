@@ -35,7 +35,7 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ vars.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "soletrabot"
+          source: "bot"
           target: "/home/ubuntu/apps/soletrabot/"
 
       - name: Restart service
