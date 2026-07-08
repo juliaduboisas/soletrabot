@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 
 	"example.com/soletrabot/game"
@@ -94,6 +95,8 @@ func main() {
 	// '/get' handler
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
 		words := game.GetWords()
+		slices.Sort(words)
+
 		// Send message
 		_, _ = bot.SendMessage(ctx, tu.Messagef(
 			tu.ID(update.Message.Chat.ID),
