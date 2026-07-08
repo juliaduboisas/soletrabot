@@ -6,12 +6,12 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 )
 
-func TestGameAddWords(t *testing.T) {
+func TestGameAddWordsGlobal(t *testing.T) {
 	// arrange
-	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o')}
+	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o'), PlayerWords: make(map[string]mapset.Set[string])}
 
 	// act
-	game.AddWords([]string{"hello", "world"})
+	game.AddWords([]string{"hello", "world"}, "teka")
 
 	// assert
 	if !game.Words.Contains("hello") {
@@ -19,6 +19,22 @@ func TestGameAddWords(t *testing.T) {
 	}
 	if game.Words.Contains("world") {
 		t.Errorf("'world' should not be in words list")
+	}
+}
+
+func TestGameAddWordsUser(t *testing.T) {
+	// arrange
+	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o'), PlayerWords: make(map[string]mapset.Set[string])}
+
+	// act
+	game.AddWords([]string{"hello", "world"}, "teka")
+
+	// assert
+	if !game.PlayerWords["teka"].Contains("hello") {
+		t.Errorf("Expected word 'hello' not found in player words")
+	}
+	if game.PlayerWords["teka"].Contains("world") {
+		t.Errorf("'world' should not be in player words list")
 	}
 }
 

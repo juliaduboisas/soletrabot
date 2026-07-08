@@ -72,7 +72,7 @@ func main() {
 		for i := 1; i < len(wordsInText); i++ {
 			wordsToAdd = append(wordsToAdd, wordsInText[i])
 		}
-		addedCount := game.AddWords(wordsToAdd)
+		addedCount := game.AddWords(wordsToAdd, update.Message.From.Username)
 
 		// Send message
 		_, _ = bot.SendMessage(ctx, tu.Messagef(

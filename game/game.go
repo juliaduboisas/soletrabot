@@ -3,15 +3,23 @@ package game
 import mapset "github.com/deckarep/golang-set/v2"
 
 type Game struct {
-	Words   mapset.Set[string]
-	Letters mapset.Set[rune]
+	Words       mapset.Set[string]
+	Letters     mapset.Set[rune]
+	PlayerWords map[string]mapset.Set[string]
 }
 
-func (G Game) AddWords(words []string) int {
+func (G Game) AddWords(words []string, player string) int {
+	playerWords, exists := G.PlayerWords[player]
+	if !exists {
+		playerWords = mapset.NewSet[string]()
+		G.PlayerWords[player] = playerWords
+	}
+
 	count := 0
 	for _, word := range words {
 		if exists := G.Words.Contains(word); !exists && G.isValidWord(word) {
 			G.Words.Add(word)
+			playerWords.Add(word)
 			count++
 		}
 	}
