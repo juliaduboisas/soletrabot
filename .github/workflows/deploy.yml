@@ -27,7 +27,7 @@ jobs:
           GOARCH: amd64
           CGO_ENABLED: 0
         run: |
-          go build soletrabot ./...
+          go build -o soletrabot ./soletrabot
 
       - name: Copy binary to server
         uses: appleboy/scp-action@v0.1.7
