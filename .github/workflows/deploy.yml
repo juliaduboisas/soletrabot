@@ -36,7 +36,7 @@ jobs:
           username: ${{ vars.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           source: "soletrabot"
-          target: "/home/ubuntu/soletrabot/soletrabot"
+          target: "/home/ubuntu/soletrabot/"
 
       - name: Restart service
         uses: appleboy/ssh-action@v1.2.0
