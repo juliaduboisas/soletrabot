@@ -37,6 +37,10 @@ func (G *Game) GetWords() []string {
 
 func (G *Game) Setup(letters []rune) []rune {
 	G.Letters.Clear()
+	for k := range G.PlayerWords {
+		delete(G.PlayerWords, k)
+	}
+
 	for _, letter := range letters {
 		G.Letters.Add(letter)
 	}
@@ -51,6 +55,16 @@ func (G *Game) GetDifference(user string) []string {
 
 	difference := G.Words.Difference(playerWords)
 	return difference.ToSlice()
+}
+
+func (G *Game) SyncUser(user string) bool {
+	playerWords, exists := G.PlayerWords[user]
+	if !exists {
+		return false
+	}
+
+	G.PlayerWords[user] = playerWords.Union(G.Words)
+	return true
 }
 
 func (G *Game) isValidWord(word string) bool {

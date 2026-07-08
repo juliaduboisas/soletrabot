@@ -118,6 +118,24 @@ func main() {
 		return nil
 	}, th.CommandEqual("diff"))
 
+	// '/sync' handler
+	bh.Handle(func(ctx *th.Context, update telego.Update) error {
+		success := game.SyncUser(update.Message.From.Username)
+		var message string
+		if success {
+			message = "Synced!"
+		} else {
+			message = "An error occurred during sync, try again later"
+		}
+
+		// Send message
+		_, _ = bot.SendMessage(ctx, tu.Messagef(
+			tu.ID(update.Message.Chat.ID),
+			"%s", message,
+		))
+		return nil
+	}, th.CommandEqual("sync"))
+
 	// Start server for receiving requests from the Telegram
 	go func() {
 		_ = http.ListenAndServe(":8080", mux)

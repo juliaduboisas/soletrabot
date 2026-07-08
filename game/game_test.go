@@ -50,7 +50,7 @@ func TestGameDiff(t *testing.T) {
 
 	// assert
 	if !difference.Contains("hollow", "howl") {
-		t.Errorf("Difference between 'teka' words and global should be 'hollow' and 'howl'. Current diff: %v", difference)
+		t.Errorf("Difference between 'veter' words and global should be 'hollow' and 'howl'. Current diff: %v", difference)
 	}
 	if difference.Contains("hello") {
 		t.Errorf("'hello' should not be in 'veter' difference. Current diff: %v", difference)
@@ -75,9 +75,10 @@ func TestWordValidation(t *testing.T) {
 
 func TestSetup(t *testing.T) {
 	// arrange
-	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o')}
+	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o'), PlayerWords: make(map[string]mapset.Set[string])}
 
 	// act
+	game.AddWords([]string{"hello"}, "veter")
 	game.Setup([]rune{'a', 'b'})
 
 	// assert
@@ -86,5 +87,24 @@ func TestSetup(t *testing.T) {
 	}
 	if game.Letters.Contains('h') {
 		t.Errorf("Setup should have removed 'h'")
+	}
+	if len(game.PlayerWords) > 0 {
+		t.Errorf("Setup should have removed all player words")
+	}
+}
+
+func TestSync(t *testing.T) {
+	// arrange
+	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o', 'w'), PlayerWords: make(map[string]mapset.Set[string])}
+
+	// act
+	game.AddWords([]string{"hello", "hollow", "howl"}, "teka")
+	game.AddWords([]string{"hello"}, "veter")
+
+	game.SyncUser("veter")
+
+	// assert
+	if !game.PlayerWords["veter"].Contains("hollow", "howl", "hello") {
+		t.Errorf("Sync between 'veter' words and global failed. Current 'veter' words: %v", game.PlayerWords["veter"])
 	}
 }
