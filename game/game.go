@@ -38,6 +38,16 @@ func (G Game) Setup(letters []rune) []rune {
 	return letters
 }
 
+func (G Game) GetDifference(user string) []string {
+	playerWords, exists := G.PlayerWords[user]
+	if !exists {
+		return G.GetWords()
+	}
+
+	difference := G.Words.Difference(playerWords)
+	return difference.ToSlice()
+}
+
 func (G Game) isValidWord(word string) bool {
 	if len(word) < 4 {
 		return false

@@ -38,6 +38,23 @@ func TestGameAddWordsUser(t *testing.T) {
 	}
 }
 
+func TestGameDiff(t *testing.T) {
+	// arrange
+	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o', 'w'), PlayerWords: make(map[string]mapset.Set[string])}
+
+	// act
+	game.AddWords([]string{"hello", "hollow", "howl"}, "teka")
+	game.AddWords([]string{"hello"}, "veter")
+
+	// assert
+	if !game.PlayerWords["teka"].Contains("hello") {
+		t.Errorf("Expected word 'hello' not found in player words")
+	}
+	if game.PlayerWords["teka"].Contains("world") {
+		t.Errorf("'world' should not be in player words list")
+	}
+}
+
 func TestWordValidation(t *testing.T) {
 	// arrange
 	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o')}
