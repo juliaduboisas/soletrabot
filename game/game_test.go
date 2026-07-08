@@ -79,17 +79,32 @@ func TestSetup(t *testing.T) {
 
 	// act
 	game.AddWords([]string{"hello"}, "veter")
-	game.Setup([]rune{'a', 'b'})
+	game.Setup([]rune{'a', 'b', 'c', 'd', 'e', 'f', 'g'})
 
 	// assert
-	if !game.Letters.Contains('a', 'b') {
-		t.Errorf("Setup should have included 'a' and 'b'")
+	if !game.Letters.Contains('a', 'b', 'c', 'd', 'e', 'f', 'g') {
+		t.Errorf("Setup should have included 'a', 'b', 'c', 'd', 'e', 'f', 'g'")
 	}
 	if game.Letters.Contains('h') {
 		t.Errorf("Setup should have removed 'h'")
 	}
 	if len(game.PlayerWords) > 0 {
 		t.Errorf("Setup should have removed all player words")
+	}
+}
+
+func TestSetupWithLessThanSevenLettersThrowsError(t *testing.T) {
+	// arrange
+	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o'), PlayerWords: make(map[string]mapset.Set[string])}
+
+	// act
+	game.AddWords([]string{"hello"}, "veter")
+	_, err1 := game.Setup([]rune{'a', 'b', 'c', 'd', 'e', 'f'})
+	_, err2 := game.Setup([]rune{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'})
+
+	// assert
+	if err1 == nil || err2 == nil {
+		t.Errorf("Setup should not be done with number of letters that is not 7")
 	}
 }
 

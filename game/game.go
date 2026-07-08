@@ -1,6 +1,10 @@
 package game
 
-import mapset "github.com/deckarep/golang-set/v2"
+import (
+	"errors"
+
+	mapset "github.com/deckarep/golang-set/v2"
+)
 
 type Game struct {
 	Words       mapset.Set[string]
@@ -35,7 +39,11 @@ func (G *Game) GetWords() []string {
 	return G.Words.ToSlice()
 }
 
-func (G *Game) Setup(letters []rune) []rune {
+func (G *Game) Setup(letters []rune) ([]rune, error) {
+	if len(letters) != 7 {
+		return []rune{}, errors.New("Setup should be done with exactly 7 letters")
+	}
+
 	G.Letters.Clear()
 	for k := range G.PlayerWords {
 		delete(G.PlayerWords, k)
@@ -44,7 +52,7 @@ func (G *Game) Setup(letters []rune) []rune {
 	for _, letter := range letters {
 		G.Letters.Add(letter)
 	}
-	return letters
+	return letters, nil
 }
 
 func (G *Game) GetDifference(user string) []string {

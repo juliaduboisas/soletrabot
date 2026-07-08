@@ -68,6 +68,15 @@ func main() {
 	// '/add' handler
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
 		wordsInText := strings.Split(update.Message.Text, "\n")
+		if len(wordsInText) < 2 {
+			_, _ = bot.SendMessage(ctx, tu.Messagef(
+				tu.ID(update.Message.Chat.ID),
+				"the /add command should contain at least one word.\n"+
+					"Example:\n/add\n<word1>\n<word2>\n...",
+			))
+			return nil
+		}
+
 		var wordsToAdd []string
 		for i := 1; i < len(wordsInText); i++ {
 			wordsToAdd = append(wordsToAdd, wordsInText[i])
@@ -95,8 +104,27 @@ func main() {
 
 	// '/setup' handler
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
-		letters := []rune(strings.Split(update.Message.Text, "\n")[1])
-		setupLetters := game.Setup(letters)
+		commandMessageLines := strings.Split(update.Message.Text, "\n")
+		if len(commandMessageLines) < 2 {
+			_, _ = bot.SendMessage(ctx, tu.Messagef(
+				tu.ID(update.Message.Chat.ID),
+				"The /setup command should have the letters in the second line.\n"+
+					"Example:\n/setup\nabcdefg",
+			))
+			return nil
+		}
+
+		letters := []rune(commandMessageLines[1])
+		setupLetters, err := game.Setup(letters)
+
+		if err != nil {
+			// Send message
+			_, _ = bot.SendMessage(ctx, tu.Messagef(
+				tu.ID(update.Message.Chat.ID),
+				"%v", err,
+			))
+			return nil
+		}
 
 		// Send message
 		_, _ = bot.SendMessage(ctx, tu.Messagef(
