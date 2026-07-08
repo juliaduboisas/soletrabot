@@ -27,21 +27,21 @@ jobs:
           GOARCH: amd64
           CGO_ENABLED: 0
         run: |
-          go build -o soletrabot .
+          go build -o bot ./soletrabot
 
       - name: Copy binary to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ vars.VM_HOST }}
+          host: ${{ secrets.VM_HOST }}
           username: ${{ vars.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "soletrabot"
-          target: "/home/ubuntu/soletrabot/soletrabot"
+          source: "bot"
+          target: "/home/ubuntu/apps/soletrabot/"
 
       - name: Restart service
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ vars.VM_HOST }}
+          host: ${{ secrets.VM_HOST }}
           username: ${{ vars.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
