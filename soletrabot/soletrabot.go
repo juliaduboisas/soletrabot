@@ -68,11 +68,20 @@ func main() {
 	// '/add' handler
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
 		wordsInText := strings.Split(update.Message.Text, "\n")
+		if len(wordsInText) < 2 {
+			_, _ = bot.SendMessage(ctx, tu.Messagef(
+				tu.ID(update.Message.Chat.ID),
+				"the /add command should contain at least one word.\n"+
+					"Example:\n/add\n<word1>\n<word2>\n...",
+			))
+			return nil
+		}
+
 		var wordsToAdd []string
 		for i := 1; i < len(wordsInText); i++ {
 			wordsToAdd = append(wordsToAdd, wordsInText[i])
 		}
-		addedCount := game.AddWords(wordsToAdd)
+		addedCount := game.AddWords(wordsToAdd, update.Message.From.Username)
 
 		// Send message
 		_, _ = bot.SendMessage(ctx, tu.Messagef(
@@ -95,8 +104,27 @@ func main() {
 
 	// '/setup' handler
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
-		letters := []rune(strings.Split(update.Message.Text, "\n")[1])
-		setupLetters := game.Setup(letters)
+		commandMessageLines := strings.Split(update.Message.Text, "\n")
+		if len(commandMessageLines) < 2 {
+			_, _ = bot.SendMessage(ctx, tu.Messagef(
+				tu.ID(update.Message.Chat.ID),
+				"The /setup command should have the letters in the second line.\n"+
+					"Example:\n/setup\nabcdefg",
+			))
+			return nil
+		}
+
+		letters := []rune(commandMessageLines[1])
+		setupLetters, err := game.Setup(letters)
+
+		if err != nil {
+			// Send message
+			_, _ = bot.SendMessage(ctx, tu.Messagef(
+				tu.ID(update.Message.Chat.ID),
+				"%v", err,
+			))
+			return nil
+		}
 
 		// Send message
 		_, _ = bot.SendMessage(ctx, tu.Messagef(
@@ -105,6 +133,36 @@ func main() {
 		))
 		return nil
 	}, th.CommandEqual("setup"))
+
+	// '/diff' handler
+	bh.Handle(func(ctx *th.Context, update telego.Update) error {
+		diff := strings.Join(game.GetDifference(update.Message.From.Username), "\n")
+
+		// Send message
+		_, _ = bot.SendMessage(ctx, tu.Messagef(
+			tu.ID(update.Message.Chat.ID),
+			"%s", diff,
+		))
+		return nil
+	}, th.CommandEqual("diff"))
+
+	// '/sync' handler
+	bh.Handle(func(ctx *th.Context, update telego.Update) error {
+		success := game.SyncUser(update.Message.From.Username)
+		var message string
+		if success {
+			message = "Synced!"
+		} else {
+			message = "An error occurred during sync, try again later"
+		}
+
+		// Send message
+		_, _ = bot.SendMessage(ctx, tu.Messagef(
+			tu.ID(update.Message.Chat.ID),
+			"%s", message,
+		))
+		return nil
+	}, th.CommandEqual("sync"))
 
 	// Start server for receiving requests from the Telegram
 	go func() {
