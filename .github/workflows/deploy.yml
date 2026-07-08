@@ -41,7 +41,7 @@ jobs:
       - name: Restart service
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ vars.VM_HOST }}
+          host: ${{ secrets.VM_HOST }}
           username: ${{ vars.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
