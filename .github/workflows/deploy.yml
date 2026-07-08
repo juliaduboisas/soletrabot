@@ -32,7 +32,7 @@ jobs:
       - name: Copy binary to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ vars.VM_HOST }}
+          host: ${{ secrets.VM_HOST }}
           username: ${{ vars.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           source: "soletrabot"
