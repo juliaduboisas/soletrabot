@@ -6,9 +6,15 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"path/filepath"
+	"slices"
 	"strings"
+	"syscall"
+	"time"
 
-	"example.com/soletrabot/game"
+	g "example.com/soletrabot/game"
+	p "example.com/soletrabot/persistence"
 
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/joho/godotenv"
@@ -18,7 +24,9 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -53,7 +61,16 @@ func main() {
 
 	bh, _ := th.NewBotHandler(bot, updates)
 
-	game := game.Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet[rune](), PlayerWords: make(map[string]mapset.Set[string])}
+	dir, _ := os.Getwd()
+	gameStateFilePath := filepath.Join(dir, "gameData.txt")
+
+	gameStatePersister := p.NewGameStatePersister(gameStateFilePath)
+
+	game := g.NewGame(mapset.NewSet[rune](), mapset.NewSet[string](), make(map[string]mapset.Set[string]))
+
+	if loadedGame, loadError := gameStatePersister.LoadGameState(); loadError == nil {
+		game = loadedGame
+	}
 
 	// '/start' handler
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
@@ -94,6 +111,8 @@ func main() {
 	// '/get' handler
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
 		words := game.GetWords()
+		slices.Sort(words)
+
 		// Send message
 		_, _ = bot.SendMessage(ctx, tu.Messagef(
 			tu.ID(update.Message.Chat.ID),
@@ -165,13 +184,55 @@ func main() {
 	}, th.CommandEqual("sync"))
 
 	// Start server for receiving requests from the Telegram
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
+
 	go func() {
-		_ = http.ListenAndServe(":8080", mux)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
 	}()
 
 	// Stop handling updates
 	defer func() { _ = bh.Stop() }()
 
 	// Start handling updates
-	_ = bh.Start()
+	go func() {
+		if err := bh.Start(); err != nil {
+			log.Println(err)
+		}
+	}()
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+
+	<-sig
+
+	log.Println("Shutting down...")
+
+	cancel()
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+
+	_ = bh.Stop()
+
+	webhook_del_err := bot.DeleteWebhook(shutdownCtx, &telego.DeleteWebhookParams{
+		DropPendingUpdates: false,
+	})
+	if webhook_del_err != nil {
+		log.Println("failed to delete webhook:", err)
+	}
+
+	_ = server.Shutdown(shutdownCtx)
+
+	if gameDataPath, saveError := gameStatePersister.SaveGameState(*game); saveError != nil {
+		log.Println("failed to save game data: ", saveError)
+	} else {
+		log.Println("saved game data to ", gameDataPath)
+	}
+
+	log.Println("Shutdown complete.")
 }

@@ -7,9 +7,17 @@ import (
 )
 
 type Game struct {
-	Words       mapset.Set[string]
 	Letters     mapset.Set[rune]
+	Words       mapset.Set[string]
 	PlayerWords map[string]mapset.Set[string]
+}
+
+func NewGame(letters mapset.Set[rune], words mapset.Set[string], playerWords map[string]mapset.Set[string]) *Game {
+	return &Game{
+		Letters:     letters,
+		Words:       words,
+		PlayerWords: playerWords,
+	}
 }
 
 func (G *Game) AddWords(words []string, player string) int {
