@@ -2,6 +2,9 @@ package game
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
+	"strings"
 
 	mapset "github.com/deckarep/golang-set/v2"
 )
@@ -73,6 +76,57 @@ func (G *Game) SyncUser(user string) bool {
 
 	G.PlayerWords[user] = playerWords.Union(G.Words)
 	return true
+}
+
+func (G Game) SaveGameState() (string, error) {
+	dir, dirErr := os.Getwd()
+	targetPath := filepath.Join(dir, "gameData.txt")
+
+	if dirErr != nil {
+		return "", dirErr
+	}
+
+	gameData := G.createGameDataString()
+
+	// write with create or override
+	writeErr := os.WriteFile(targetPath, []byte(gameData), 0644)
+
+	if writeErr != nil {
+		return "", writeErr
+	}
+
+	return targetPath, nil
+}
+
+func (G Game) createGameDataString() string {
+	var sb strings.Builder
+
+	sb.WriteString(":Letters\n")
+
+	for _, letter := range G.Letters.ToSlice() {
+		sb.WriteString(string(rune(letter)))
+		sb.WriteString("\n")
+	}
+
+	sb.WriteString(":GameWords\n")
+
+	for _, word := range G.GetWords() {
+		sb.WriteString(word)
+		sb.WriteString("\n")
+	}
+
+	for player := range G.PlayerWords {
+		sb.WriteString(":")
+		sb.WriteString(player)
+		sb.WriteString("\n")
+
+		for _, word := range G.GetWords() {
+			sb.WriteString(word)
+			sb.WriteString("\n")
+		}
+	}
+
+	return sb.String()
 }
 
 func (G *Game) isValidWord(word string) bool {

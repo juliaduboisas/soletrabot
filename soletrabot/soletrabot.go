@@ -217,5 +217,11 @@ func main() {
 
 	_ = server.Shutdown(shutdownCtx)
 
+	if gameDataPath, saveError := game.SaveGameState(); saveError != nil {
+		log.Println("failed to save game data: ", saveError)
+	} else {
+		log.Println("saved game data to ", gameDataPath)
+	}
+
 	log.Println("Shutdown complete.")
 }
