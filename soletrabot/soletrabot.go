@@ -7,12 +7,14 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"slices"
 	"strings"
 	"syscall"
 	"time"
 
-	"example.com/soletrabot/game"
+	g "example.com/soletrabot/game"
+	p "example.com/soletrabot/persistence"
 
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/joho/godotenv"
@@ -59,7 +61,16 @@ func main() {
 
 	bh, _ := th.NewBotHandler(bot, updates)
 
-	game := game.Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet[rune](), PlayerWords: make(map[string]mapset.Set[string])}
+	dir, _ := os.Getwd()
+	gameStateFilePath := filepath.Join(dir, "gameData.txt")
+
+	gameStatePersister := p.NewGameStatePersister(gameStateFilePath)
+
+	game := g.NewGame(mapset.NewSet[rune](), mapset.NewSet[string](), make(map[string]mapset.Set[string]))
+
+	if loadedGame, loadError := gameStatePersister.LoadGameState(); loadError == nil {
+		game = loadedGame
+	}
 
 	// '/start' handler
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
@@ -217,7 +228,7 @@ func main() {
 
 	_ = server.Shutdown(shutdownCtx)
 
-	if gameDataPath, saveError := game.SaveGameState(); saveError != nil {
+	if gameDataPath, saveError := gameStatePersister.SaveGameState(*game); saveError != nil {
 		log.Println("failed to save game data: ", saveError)
 	} else {
 		log.Println("saved game data to ", gameDataPath)

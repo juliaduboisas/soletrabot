@@ -1,0 +1,113 @@
+package persistence
+
+import (
+	"os"
+	"strings"
+
+	g "example.com/soletrabot/game"
+	mapset "github.com/deckarep/golang-set/v2"
+)
+
+type GameStatePersister struct {
+	gameStateFilePath string
+}
+
+func NewGameStatePersister(gameStateFilePath string) *GameStatePersister {
+	return &GameStatePersister{gameStateFilePath: gameStateFilePath}
+}
+
+func (P GameStatePersister) SaveGameState(game g.Game) (string, error) {
+	gameData := createGameDataString(game)
+
+	// write with create or override
+	writeErr := os.WriteFile(P.gameStateFilePath, []byte(gameData), 0644)
+
+	if writeErr != nil {
+		return "", writeErr
+	}
+
+	return P.gameStateFilePath, nil
+}
+
+func (P GameStatePersister) LoadGameState() (*g.Game, error) {
+	data, err := os.ReadFile(P.gameStateFilePath)
+	var emptyGame g.Game
+
+	if err != nil {
+		return &emptyGame, err
+	}
+
+	textLines := strings.Split(string(data), "\n")
+
+	letters := mapset.NewSet[rune]()
+	words := mapset.NewSet[string]()
+	playerWords := make(map[string]mapset.Set[string])
+
+	nowAdding := -1
+	user := ""
+
+	for _, word := range textLines {
+		switch word {
+		case ":Letters":
+			nowAdding = 0
+			continue
+		case ":GameWords":
+			nowAdding = 1
+			continue
+		default:
+			if strings.HasPrefix(word, ":") {
+				user = strings.TrimSpace(strings.Replace(word, ":", "", 1))
+				playerWords[user] = mapset.NewSet[string]()
+				nowAdding = 2
+				continue
+			}
+		}
+
+		switch nowAdding {
+		case 0:
+			letters.Add([]rune(word)[0])
+		case 1:
+			words.Add(word)
+		case 2:
+			playerWords[user].Add(word)
+		}
+	}
+
+	game := g.Game{Letters: letters, Words: words, PlayerWords: playerWords}
+
+	return &game, nil
+}
+
+func createGameDataString(game g.Game) string {
+	var sb strings.Builder
+
+	sb.WriteString(":Letters\n")
+
+	for _, letter := range game.Letters.ToSlice() {
+		sb.WriteString(string(rune(letter)))
+		sb.WriteString("\n")
+	}
+
+	sb.WriteString(":GameWords\n")
+
+	for _, word := range game.GetWords() {
+		sb.WriteString(word)
+		sb.WriteString("\n")
+	}
+
+	for player := range game.PlayerWords {
+		sb.WriteString(":")
+		sb.WriteString(player)
+		sb.WriteString("\n")
+
+		playerWords := game.PlayerWords[player].ToSlice()
+		for i, word := range playerWords {
+			sb.WriteString(word)
+			if i != len(playerWords)-1 {
+				sb.WriteString("\n")
+			}
+		}
+	}
+
+	return sb.String()
+}
