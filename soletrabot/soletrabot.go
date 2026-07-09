@@ -155,7 +155,9 @@ func main() {
 
 	// '/diff' handler
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
-		diff := strings.Join(game.GetDifference(update.Message.From.Username), "\n")
+		diffSlice := game.GetDifference(update.Message.From.Username)
+		slices.Sort(diffSlice)
+		diff := strings.Join(diffSlice, "\n")
 
 		// Send message
 		_, _ = bot.SendMessage(ctx, tu.Messagef(
