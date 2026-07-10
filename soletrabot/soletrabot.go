@@ -33,9 +33,7 @@ func main() {
 	botToken := os.Getenv("TOKEN")
 	webhookURL := os.Getenv("WEBHOOK_URL")
 
-	// Note: Please keep in mind that default logger may expose sensitive information,
-	// use in development only
-	bot, err := telego.NewBot(botToken, telego.WithDefaultDebugLogger())
+	bot, err := telego.NewBot(botToken, telego.WithDefaultLogger(false, true))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
