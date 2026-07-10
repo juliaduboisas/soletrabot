@@ -92,7 +92,8 @@ func (G *Game) GetDifference(user string) []string {
 func (G *Game) SyncUser(user string) bool {
 	playerWords, exists := G.PlayerWords[user]
 	if !exists {
-		return false
+		G.PlayerWords[user] = mapset.NewSet[string]()
+		playerWords, _ = G.PlayerWords[user]
 	}
 
 	words := mapset.NewSet[string]()
