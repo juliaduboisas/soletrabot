@@ -40,7 +40,7 @@ func (P GameStatePersister) LoadGameState() (*g.Game, error) {
 	textLines := strings.Split(string(data), "\n")
 
 	letters := mapset.NewSet[rune]()
-	words := mapset.NewSet[string]()
+	words := make(map[string]string)
 	playerWords := make(map[string]mapset.Set[string])
 
 	nowAdding := -1
@@ -67,7 +67,8 @@ func (P GameStatePersister) LoadGameState() (*g.Game, error) {
 		case 0:
 			letters.Add([]rune(word)[0])
 		case 1:
-			words.Add(word)
+			wordAndAdder := strings.Split(word, ",")
+			words[wordAndAdder[0]] = wordAndAdder[1]
 		case 2:
 			playerWords[user].Add(word)
 		}
@@ -90,8 +91,10 @@ func createGameDataString(game g.Game) string {
 
 	sb.WriteString(":GameWords\n")
 
-	for _, word := range game.GetWords() {
+	for word, player := range game.Words {
 		sb.WriteString(word)
+		sb.WriteString(",")
+		sb.WriteString(player)
 		sb.WriteString("\n")
 	}
 

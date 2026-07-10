@@ -65,7 +65,7 @@ func main() {
 
 	gameStatePersister := p.NewGameStatePersister(gameStateFilePath)
 
-	game := g.NewGame(mapset.NewSet[rune](), mapset.NewSet[string](), make(map[string]mapset.Set[string]))
+	game := g.NewGame(mapset.NewSet[rune](), make(map[string]string), make(map[string]mapset.Set[string]))
 
 	if loadedGame, loadError := gameStatePersister.LoadGameState(); loadError == nil {
 		game = loadedGame
@@ -186,6 +186,29 @@ func main() {
 		))
 		return nil
 	}, th.CommandEqual("sync"))
+
+	// '/blame' handler
+	bh.Handle(func(ctx *th.Context, update telego.Update) error {
+		word := strings.TrimSpace(strings.Split(update.Message.Text, "\n")[1])
+		word = strings.ToLower(word)
+
+		player, err := game.Blame(word)
+
+		if err != nil {
+			_, _ = bot.SendMessage(ctx, tu.Messagef(
+				tu.ID(update.Message.Chat.ID),
+				"%v", err,
+			))
+			return nil
+		}
+
+		// Send message
+		_, _ = bot.SendMessage(ctx, tu.Messagef(
+			tu.ID(update.Message.Chat.ID),
+			"%s", player,
+		))
+		return nil
+	}, th.CommandEqual("blame"))
 
 	// Start server for receiving requests from the Telegram
 	server := &http.Server{
