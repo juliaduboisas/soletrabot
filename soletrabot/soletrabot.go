@@ -155,12 +155,16 @@ func main() {
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
 		diffSlice := game.GetDifference(update.Message.From.Username)
 
-		diff := strings.Join(diffSlice, "\n")
+		diffResponse := strings.Join(diffSlice, "\n")
+
+		if len(diffSlice) == 0 {
+			diffResponse = "You're up to date!"
+		}
 
 		// Send message
 		_, _ = bot.SendMessage(ctx, tu.Messagef(
 			tu.ID(update.Message.Chat.ID),
-			"%s", diff,
+			"%s", diffResponse,
 		))
 		return nil
 	}, th.CommandEqual("diff"))
