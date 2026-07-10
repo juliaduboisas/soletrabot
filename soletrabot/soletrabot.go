@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"slices"
 	"strings"
 	"syscall"
 	"time"
@@ -111,7 +110,6 @@ func main() {
 	// '/get' handler
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
 		words := game.GetWords()
-		slices.Sort(words)
 
 		// Send message
 		_, _ = bot.SendMessage(ctx, tu.Messagef(
@@ -156,7 +154,7 @@ func main() {
 	// '/diff' handler
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
 		diffSlice := game.GetDifference(update.Message.From.Username)
-		slices.Sort(diffSlice)
+
 		diff := strings.Join(diffSlice, "\n")
 
 		// Send message

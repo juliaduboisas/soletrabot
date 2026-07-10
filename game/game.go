@@ -1,7 +1,9 @@
 package game
 
 import (
+	"cmp"
 	"errors"
+	"slices"
 
 	mapset "github.com/deckarep/golang-set/v2"
 )
@@ -44,7 +46,7 @@ func (G *Game) AddWords(words []string, player string) int {
 }
 
 func (G *Game) GetWords() []string {
-	return G.Words.ToSlice()
+	return sortSizeFirst(G.Words.ToSlice())
 }
 
 func (G *Game) Setup(letters []rune) ([]rune, error) {
@@ -70,7 +72,7 @@ func (G *Game) GetDifference(user string) []string {
 	}
 
 	difference := G.Words.Difference(playerWords)
-	return difference.ToSlice()
+	return sortSizeFirst(difference.ToSlice())
 }
 
 func (G *Game) SyncUser(user string) bool {
@@ -95,4 +97,15 @@ func (G *Game) isValidWord(word string) bool {
 	}
 
 	return true
+}
+
+func sortSizeFirst(s []string) []string {
+	slices.SortFunc(s, func(a, b string) int {
+		if len(a) != len(b) {
+			return cmp.Compare(len(a), len(b))
+		}
+		return cmp.Compare(a, b)
+	})
+
+	return s
 }
