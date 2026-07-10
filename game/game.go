@@ -8,11 +8,11 @@ import (
 
 type Game struct {
 	Letters     mapset.Set[rune]
-	Words       mapset.Set[string]
+	Words       map[string]string
 	PlayerWords map[string]mapset.Set[string]
 }
 
-func NewGame(letters mapset.Set[rune], words mapset.Set[string], playerWords map[string]mapset.Set[string]) *Game {
+func NewGame(letters mapset.Set[rune], words map[string]string, playerWords map[string]mapset.Set[string]) *Game {
 	return &Game{
 		Letters:     letters,
 		Words:       words,
@@ -20,22 +20,27 @@ func NewGame(letters mapset.Set[rune], words mapset.Set[string], playerWords map
 	}
 }
 
-func (G *Game) AddWords(words []string, player string) int {
+func (G *Game) AddWords(wordsToAdd []string, player string) int {
 	_, exists := G.PlayerWords[player]
 	if !exists {
 		G.PlayerWords[player] = mapset.NewSet[string]()
 	}
 
+	words := mapset.NewSet[string]()
+	for word := range G.Words {
+		words.Add(word)
+	}
+
 	count := 0
-	for _, word := range words {
+	for _, word := range wordsToAdd {
 		// add word for player
 		if exists := G.PlayerWords[player].Contains(word); !exists && G.isValidWord(word) {
 			G.PlayerWords[player].Add(word)
 		}
 
 		// add word globally
-		if exists := G.Words.Contains(word); !exists && G.isValidWord(word) {
-			G.Words.Add(word)
+		if exists := words.Contains(word); !exists && G.isValidWord(word) {
+			G.Words[word] = player
 			G.PlayerWords[player].Add(word)
 			count++
 		}
@@ -44,7 +49,11 @@ func (G *Game) AddWords(words []string, player string) int {
 }
 
 func (G *Game) GetWords() []string {
-	return G.Words.ToSlice()
+	var words []string
+	for word := range G.Words {
+		words = append(words, word)
+	}
+	return words
 }
 
 func (G *Game) Setup(letters []rune) ([]rune, error) {
@@ -69,7 +78,12 @@ func (G *Game) GetDifference(user string) []string {
 		return G.GetWords()
 	}
 
-	difference := G.Words.Difference(playerWords)
+	words := mapset.NewSet[string]()
+	for word := range G.Words {
+		words.Add(word)
+	}
+
+	difference := words.Difference(playerWords)
 	return difference.ToSlice()
 }
 
@@ -79,8 +93,22 @@ func (G *Game) SyncUser(user string) bool {
 		return false
 	}
 
-	G.PlayerWords[user] = playerWords.Union(G.Words)
+	words := mapset.NewSet[string]()
+	for word := range G.Words {
+		words.Add(word)
+	}
+
+	G.PlayerWords[user] = playerWords.Union(words)
 	return true
+}
+
+func (G *Game) Blame(word string) (string, error) {
+	user, exists := G.Words[word]
+	if !exists {
+		return "", errors.New("This word was not added dummy :)")
+	}
+
+	return user, nil
 }
 
 func (G *Game) isValidWord(word string) bool {

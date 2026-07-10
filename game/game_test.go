@@ -8,23 +8,23 @@ import (
 
 func TestGameAddWordsGlobal(t *testing.T) {
 	// arrange
-	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o'), PlayerWords: make(map[string]mapset.Set[string])}
+	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o'), PlayerWords: make(map[string]mapset.Set[string])}
 
 	// act
 	game.AddWords([]string{"hello", "world"}, "teka")
 
 	// assert
-	if !game.Words.Contains("hello") {
+	if _, exists := game.Words["hello"]; !exists {
 		t.Errorf("Expected word 'hello' not found in game words")
 	}
-	if game.Words.Contains("world") {
+	if _, exists := game.Words["world"]; exists {
 		t.Errorf("'world' should not be in words list")
 	}
 }
 
 func TestGameAddWordsUser(t *testing.T) {
 	// arrange
-	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o'), PlayerWords: make(map[string]mapset.Set[string])}
+	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o'), PlayerWords: make(map[string]mapset.Set[string])}
 
 	// act
 	game.AddWords([]string{"hello", "world"}, "teka")
@@ -40,7 +40,7 @@ func TestGameAddWordsUser(t *testing.T) {
 
 func TestGameDiff(t *testing.T) {
 	// arrange
-	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o', 'w'), PlayerWords: make(map[string]mapset.Set[string])}
+	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o', 'w'), PlayerWords: make(map[string]mapset.Set[string])}
 
 	// act
 	game.AddWords([]string{"hello", "hollow", "howl"}, "teka")
@@ -59,7 +59,7 @@ func TestGameDiff(t *testing.T) {
 
 func TestWordValidation(t *testing.T) {
 	// arrange
-	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o')}
+	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o')}
 
 	// assert
 	if !game.isValidWord("hello") {
@@ -75,7 +75,7 @@ func TestWordValidation(t *testing.T) {
 
 func TestSetup(t *testing.T) {
 	// arrange
-	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o'), PlayerWords: make(map[string]mapset.Set[string])}
+	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o'), PlayerWords: make(map[string]mapset.Set[string])}
 
 	// act
 	game.AddWords([]string{"hello"}, "veter")
@@ -95,7 +95,7 @@ func TestSetup(t *testing.T) {
 
 func TestSetupWithLessThanSevenLettersThrowsError(t *testing.T) {
 	// arrange
-	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o'), PlayerWords: make(map[string]mapset.Set[string])}
+	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o'), PlayerWords: make(map[string]mapset.Set[string])}
 
 	// act
 	game.AddWords([]string{"hello"}, "veter")
@@ -110,7 +110,7 @@ func TestSetupWithLessThanSevenLettersThrowsError(t *testing.T) {
 
 func TestSync(t *testing.T) {
 	// arrange
-	game := Game{Words: mapset.NewSet[string](), Letters: mapset.NewSet('h', 'e', 'l', 'o', 'w'), PlayerWords: make(map[string]mapset.Set[string])}
+	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o', 'w'), PlayerWords: make(map[string]mapset.Set[string])}
 
 	// act
 	game.AddWords([]string{"hello", "hollow", "howl"}, "teka")
@@ -121,5 +121,56 @@ func TestSync(t *testing.T) {
 	// assert
 	if !game.PlayerWords["veter"].Contains("hollow", "howl", "hello") {
 		t.Errorf("Sync between 'veter' words and global failed. Current 'veter' words: %v", game.PlayerWords["veter"])
+	}
+}
+
+func TestBlameValid(t *testing.T) {
+	// arrange
+	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o', 'w'), PlayerWords: make(map[string]mapset.Set[string])}
+
+	// act
+	game.AddWords([]string{"hello", "hollow", "howl"}, "teka")
+	game.AddWords([]string{"hello"}, "veter")
+
+	player, err := game.Blame("hollow")
+
+	// assert
+	if player != "teka" {
+		t.Errorf("Error in blame command: expected 'teka' got '%s'", player)
+	}
+	if err != nil {
+		t.Errorf("Error in blame command: %v", err)
+	}
+}
+
+func TestBlameInvalid(t *testing.T) {
+	// arrange
+	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o', 'w'), PlayerWords: make(map[string]mapset.Set[string])}
+
+	// act
+	game.AddWords([]string{"hello", "hollow", "howl"}, "teka")
+	game.AddWords([]string{"hello"}, "veter")
+
+	_, err := game.Blame("uau")
+
+	// assert
+	if err == nil {
+		t.Errorf("Blame command should have thrown error")
+	}
+}
+
+func TestBlameOrder(t *testing.T) {
+	// arrange
+	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o', 'w'), PlayerWords: make(map[string]mapset.Set[string])}
+
+	// act
+	game.AddWords([]string{"hello", "hollow", "howl"}, "teka")
+	game.AddWords([]string{"hello"}, "veter")
+
+	player, _ := game.Blame("hello")
+
+	// assert
+	if player != "teka" {
+		t.Errorf("Error in blame command: expected 'teka' got '%s'", player)
 	}
 }
