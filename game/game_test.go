@@ -57,6 +57,20 @@ func TestGameDiff(t *testing.T) {
 	}
 }
 
+func TestGameDiffForUserWithoutWordsReturnsAllWords(t *testing.T) {
+	// arrange
+	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o', 'w'), PlayerWords: make(map[string]mapset.Set[string])}
+
+	// act
+	game.AddWords([]string{"hello", "hollow"}, "teka")
+	difference := mapset.NewSet(game.GetDifference("veter")...)
+
+	// assert
+	if !difference.Contains("hello", "hollow") {
+		t.Errorf("Difference for a user without any words should include all global words. Current diff: %v", difference)
+	}
+}
+
 func TestWordValidation(t *testing.T) {
 	// arrange
 	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o')}
@@ -172,5 +186,23 @@ func TestBlameOrder(t *testing.T) {
 	// assert
 	if player != "teka" {
 		t.Errorf("Error in blame command: expected 'teka' got '%s'", player)
+	}
+}
+
+func TestSyncNewUser(t *testing.T) {
+	// arrange
+	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o', 'w'), PlayerWords: make(map[string]mapset.Set[string])}
+
+	// act
+	game.AddWords([]string{"hello", "hollow", "howl"}, "teka")
+
+	ok := game.SyncUser("veter")
+
+	// assert
+	if !ok {
+		t.Errorf("Error syncing new user")
+	}
+	if len(game.PlayerWords["veter"].ToSlice()) != 3 {
+		t.Errorf("Sync had wrong result. Expected %v, got %v", []string{"hello", "hollow", "howl"}, game.PlayerWords["veter"].ToSlice())
 	}
 }

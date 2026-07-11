@@ -31,10 +31,9 @@ func (P GameStatePersister) SaveGameState(game g.Game) (string, error) {
 
 func (P GameStatePersister) LoadGameState() (*g.Game, error) {
 	data, err := os.ReadFile(P.gameStateFilePath)
-	var emptyGame g.Game
 
 	if err != nil {
-		return &emptyGame, err
+		return newEmptyGame(), err
 	}
 
 	textLines := strings.Split(string(data), "\n")
@@ -79,6 +78,11 @@ func (P GameStatePersister) LoadGameState() (*g.Game, error) {
 	return &game, nil
 }
 
+func newEmptyGame() *g.Game {
+
+	return g.NewGame(mapset.NewSet[rune](), make(map[string]string), make(map[string]mapset.Set[string]))
+}
+
 func createGameDataString(game g.Game) string {
 	var sb strings.Builder
 
@@ -104,13 +108,55 @@ func createGameDataString(game g.Game) string {
 		sb.WriteString("\n")
 
 		playerWords := game.PlayerWords[player].ToSlice()
-		for i, word := range playerWords {
+		for _, word := range playerWords {
 			sb.WriteString(word)
-			if i != len(playerWords)-1 {
-				sb.WriteString("\n")
-			}
+			sb.WriteString("\n")
 		}
 	}
 
-	return sb.String()
+	result := sb.String()
+	return strings.TrimSuffix(result, "\n")
+}
+
+func convertGamaDataStringToGame(data []byte) *g.Game {
+	textLines := strings.Split(string(data), "\n")
+
+	letters := mapset.NewSet[rune]()
+	words := make(map[string]string)
+	playerWords := make(map[string]mapset.Set[string])
+
+	nowAdding := -1
+	user := ""
+
+	for _, word := range textLines {
+		switch word {
+		case ":Letters":
+			nowAdding = 0
+			continue
+		case ":GameWords":
+			nowAdding = 1
+			continue
+		default:
+			if strings.HasPrefix(word, ":") {
+				user = strings.TrimSpace(strings.Replace(word, ":", "", 1))
+				playerWords[user] = mapset.NewSet[string]()
+				nowAdding = 2
+				continue
+			}
+		}
+
+		switch nowAdding {
+		case 0:
+			letters.Add([]rune(word)[0])
+		case 1:
+			wordAndAdder := strings.Split(word, ",")
+			words[wordAndAdder[0]] = wordAndAdder[1]
+		case 2:
+			playerWords[user].Add(word)
+		}
+	}
+
+	game := g.Game{Letters: letters, Words: words, PlayerWords: playerWords}
+
+	return &game
 }
