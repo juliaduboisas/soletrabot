@@ -64,6 +64,9 @@ func (G *Game) Setup(letters []rune) ([]rune, error) {
 	}
 
 	G.Letters.Clear()
+	for k := range G.Words {
+		delete(G.Words, k)
+	}
 	for k := range G.PlayerWords {
 		delete(G.PlayerWords, k)
 	}
