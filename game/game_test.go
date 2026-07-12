@@ -38,6 +38,38 @@ func TestGameAddWordsUser(t *testing.T) {
 	}
 }
 
+func TestAddWordsWithWhitespace(t *testing.T) {
+	// arrange
+	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o'), PlayerWords: make(map[string]mapset.Set[string])}
+
+	// act
+	game.AddWords([]string{"hello ", " hell"}, "teka")
+
+	// assert
+	if _, exists := game.Words["hello"]; !exists {
+		t.Errorf("Expected word 'hello' not found in words")
+	}
+	if _, exists := game.Words["hell"]; !exists {
+		t.Errorf("Expected word 'hell' not found in words")
+	}
+}
+
+func TestAddWordsWithUppercase(t *testing.T) {
+	// arrange
+	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o'), PlayerWords: make(map[string]mapset.Set[string])}
+
+	// act
+	game.AddWords([]string{"Hello ", " heLl"}, "teka")
+
+	// assert
+	if _, exists := game.Words["hello"]; !exists {
+		t.Errorf("Expected word 'hello' not found in words")
+	}
+	if _, exists := game.Words["hell"]; !exists {
+		t.Errorf("Expected word 'hell' not found in words")
+	}
+}
+
 func TestGameDiff(t *testing.T) {
 	// arrange
 	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o', 'w'), PlayerWords: make(map[string]mapset.Set[string])}

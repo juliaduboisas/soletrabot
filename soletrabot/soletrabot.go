@@ -81,7 +81,7 @@ func main() {
 
 	// '/add' handler
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
-		wordsInText := strings.Split(strings.ToLower(update.Message.Text), "\n")
+		wordsInText := strings.Split(update.Message.Text, "\n")
 		if len(wordsInText) < 2 {
 			_, _ = bot.SendMessage(ctx, tu.Messagef(
 				tu.ID(update.Message.Chat.ID),
