@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"errors"
 	"slices"
+	"strings"
 
 	mapset "github.com/deckarep/golang-set/v2"
 )
@@ -35,6 +36,7 @@ func (G *Game) AddWords(wordsToAdd []string, player string) int {
 
 	count := 0
 	for _, word := range wordsToAdd {
+		word = strings.ToLower(strings.TrimSpace(word))
 		// add word for player
 		if exists := G.PlayerWords[player].Contains(word); !exists && G.isValidWord(word) {
 			G.PlayerWords[player].Add(word)
