@@ -105,6 +105,9 @@ func TestSetup(t *testing.T) {
 	if len(game.PlayerWords) > 0 {
 		t.Errorf("Setup should have removed all player words")
 	}
+	if len(game.Words) > 0 {
+		t.Errorf("Setup should have removed all words")
+	}
 }
 
 func TestSetupWithLessThanSevenLettersThrowsError(t *testing.T) {
