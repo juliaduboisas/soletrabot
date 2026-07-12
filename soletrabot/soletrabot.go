@@ -109,10 +109,18 @@ func main() {
 	bh.Handle(func(ctx *th.Context, update telego.Update) error {
 		words := game.GetWords()
 
+		var response string
+
+		if len(words) > 0 {
+			response = strings.Join(words, "\n")
+		} else {
+			response = "There are no words yet dummy :)"
+		}
+
 		// Send message
 		_, _ = bot.SendMessage(ctx, tu.Messagef(
 			tu.ID(update.Message.Chat.ID),
-			"%s", strings.Join(words, "\n"),
+			"%s", response,
 		))
 		return nil
 	}, th.CommandEqual("get"))
