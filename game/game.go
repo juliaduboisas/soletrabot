@@ -119,6 +119,17 @@ func (G *Game) Blame(word string) (string, error) {
 	return user, nil
 }
 
+func (G *Game) GlobalWordCount() (int, error) {
+
+	totalWords := len(G.GetWords())
+
+	if totalWords <= 0 {
+		return 0, errors.New("There are no words added yet! You can be the first one ;D")
+	}
+
+	return totalWords, nil
+}
+
 func (G *Game) isValidWord(word string) bool {
 	if len(word) < 4 {
 		return false

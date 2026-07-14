@@ -241,3 +241,37 @@ func TestSyncNewUser(t *testing.T) {
 		t.Errorf("Sync had wrong result. Expected %v, got %v", []string{"hello", "hollow", "howl"}, game.PlayerWords["veter"].ToSlice())
 	}
 }
+
+func TestGlobalWordCountValid(t *testing.T) {
+	// arrange
+	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o', 'w'), PlayerWords: make(map[string]mapset.Set[string])}
+
+	// act
+	game.AddWords([]string{"hello", "hollow", "howl"}, "teka")
+
+	globalWordCount, error := game.GlobalWordCount()
+
+	// assert
+	if globalWordCount != len(game.GetWords()) {
+		t.Errorf("Word count had wrong result. Expected %d, got %d", len(game.GetWords()), globalWordCount)
+	}
+	if error != nil {
+		t.Errorf("Error in count command error handling. Expected nil, got %v", error)
+	}
+}
+
+func TestGlobalWordCountZero(t *testing.T) {
+	// arrange
+	game := Game{Words: make(map[string]string), Letters: mapset.NewSet('h', 'e', 'l', 'o', 'w'), PlayerWords: make(map[string]mapset.Set[string])}
+
+	// act
+	globalWordCount, error := game.GlobalWordCount()
+
+	// assert
+	if globalWordCount != 0 {
+		t.Errorf("Word count had wrong result. Expected 0, got %d", globalWordCount)
+	}
+	if error == nil {
+		t.Errorf("Error in count command error handling. Expected error, got nil.")
+	}
+}
