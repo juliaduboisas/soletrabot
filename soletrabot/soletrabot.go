@@ -216,6 +216,26 @@ func main() {
 		return nil
 	}, th.CommandEqual("blame"))
 
+	// '/count' handler
+	bh.Handle(func(ctx *th.Context, update telego.Update) error {
+		count, err := game.GlobalWordCount()
+
+		if err != nil {
+			_, _ = bot.SendMessage(ctx, tu.Messagef(
+				tu.ID(update.Message.Chat.ID),
+				"%v", err,
+			))
+			return nil
+		}
+
+		// Send message
+		_, _ = bot.SendMessage(ctx, tu.Messagef(
+			tu.ID(update.Message.Chat.ID),
+			"Total words: %d", count,
+		))
+		return nil
+	}, th.CommandEqual("count"))
+
 	// Start server for receiving requests from the Telegram
 	server := &http.Server{
 		Addr:    ":8080",
