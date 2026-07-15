@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"errors"
 	"slices"
+	"sort"
 	"strings"
 
 	mapset "github.com/deckarep/golang-set/v2"
@@ -128,6 +129,42 @@ func (G *Game) GlobalWordCount() (int, error) {
 	}
 
 	return totalWords, nil
+}
+
+func (G *Game) ShowLeaderboard() map[string]int {
+	leaderboard := map[string]int{}
+
+	for _, player := range G.Words {
+		_, exists := leaderboard[player]
+		if !exists {
+			leaderboard[player] = 0
+		}
+
+		leaderboard[player]++
+	}
+
+	orderedLeaderboard := G.OrderMapByValue(leaderboard)
+
+	return orderedLeaderboard
+}
+
+func (G *Game) OrderMapByValue(disordered map[string]int) map[string]int {
+	keys := make([]string, 0, len(disordered))
+	for k := range disordered {
+		keys = append(keys, k)
+	}
+
+	sort.Slice(keys, func(i, j int) bool {
+		return disordered[keys[i]] > disordered[keys[j]]
+	})
+
+	ordered := map[string]int{}
+
+	for _, k := range keys {
+		ordered[k] = disordered[k]
+	}
+
+	return ordered
 }
 
 func (G *Game) isValidWord(word string) bool {
