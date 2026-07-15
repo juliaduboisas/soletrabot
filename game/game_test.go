@@ -275,3 +275,47 @@ func TestGlobalWordCountZero(t *testing.T) {
 		t.Errorf("Error in count command error handling. Expected error, got nil.")
 	}
 }
+
+func TestShowLeaderboardCountsWordsPerPlayer(t *testing.T) {
+	// arrange
+	game := Game{
+		Words: map[string]string{
+			"hello":  "teka",
+			"hollow": "teka",
+			"howl":   "veter",
+		},
+		Letters:     mapset.NewSet('h', 'e', 'l', 'o', 'w'),
+		PlayerWords: make(map[string]mapset.Set[string]),
+	}
+
+	// act
+	leaderboard := game.ShowLeaderboard()
+
+	// assert
+	if leaderboard["teka"] != 2 {
+		t.Errorf("Expected teka to have 2 words, got %d", leaderboard["teka"])
+	}
+	if leaderboard["veter"] != 1 {
+		t.Errorf("Expected veter to have 1 word, got %d", leaderboard["veter"])
+	}
+}
+
+func TestOrderMapByValueSortsDescendingByCount(t *testing.T) {
+	// arrange
+	game := Game{}
+	input := map[string]int{"alice": 2, "bob": 5, "carol": 1}
+
+	// act
+	ordered := game.OrderMapByValue(input)
+
+	// assert
+	if ordered["bob"] != 5 {
+		t.Errorf("Expected bob to be first with value 5, got %d", ordered["bob"])
+	}
+	if ordered["alice"] != 2 {
+		t.Errorf("Expected alice to keep value 2, got %d", ordered["alice"])
+	}
+	if ordered["carol"] != 1 {
+		t.Errorf("Expected carol to keep value 1, got %d", ordered["carol"])
+	}
+}
