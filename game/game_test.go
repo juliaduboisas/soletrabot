@@ -292,30 +292,62 @@ func TestShowLeaderboardCountsWordsPerPlayer(t *testing.T) {
 	leaderboard := game.ShowLeaderboard()
 
 	// assert
-	if leaderboard["teka"] != 2 {
-		t.Errorf("Expected teka to have 2 words, got %d", leaderboard["teka"])
+	var orderedLeaderboard []string
+
+	for player := range leaderboard {
+		orderedLeaderboard = append(orderedLeaderboard, player)
 	}
-	if leaderboard["veter"] != 1 {
-		t.Errorf("Expected veter to have 1 word, got %d", leaderboard["veter"])
+
+	if len(leaderboard) != 2 {
+		t.Fatalf("Expected 2 leaderboard entries, got %d", len(leaderboard))
+	}
+	if orderedLeaderboard[0] != "teka" {
+		t.Errorf("Expected teka to be first with 2 words, got %+v", orderedLeaderboard[0])
+	}
+	if leaderboard[orderedLeaderboard[0]] != 2 {
+		t.Errorf("Expected teka to have 2 words, got %+v", leaderboard[orderedLeaderboard[0]])
+	}
+	if orderedLeaderboard[1] != "veter" {
+		t.Errorf("Expected veter to be second with 1 word, got %+v", orderedLeaderboard[1])
+	}
+	if leaderboard[orderedLeaderboard[1]] != 1 {
+		t.Errorf("Expected veter to have 1 word, got %+v", leaderboard[orderedLeaderboard[1]])
 	}
 }
 
 func TestOrderMapByValueSortsDescendingByCount(t *testing.T) {
 	// arrange
-	game := Game{}
 	input := map[string]int{"alice": 2, "bob": 5, "carol": 1}
 
 	// act
-	ordered := game.OrderMapByValue(input)
+	ordered := OrderMapByValue(input)
 
 	// assert
-	if ordered["bob"] != 5 {
-		t.Errorf("Expected bob to be first with value 5, got %d", ordered["bob"])
+	var orderedPlayers []string
+
+	for player := range ordered {
+		orderedPlayers = append(orderedPlayers, player)
 	}
-	if ordered["alice"] != 2 {
-		t.Errorf("Expected alice to keep value 2, got %d", ordered["alice"])
+
+	if len(ordered) != 3 {
+		t.Fatalf("Expected 3 ordered entries, got %d", len(ordered))
 	}
-	if ordered["carol"] != 1 {
-		t.Errorf("Expected carol to keep value 1, got %d", ordered["carol"])
+	if orderedPlayers[0] != "bob" {
+		t.Errorf("Expected bob to be first with value 5, got %+v", orderedPlayers[0])
+	}
+	if ordered[orderedPlayers[0]] != 5 {
+		t.Errorf("Expected bob to have value 5, got %+v", ordered[orderedPlayers[0]])
+	}
+	if orderedPlayers[1] != "alice" {
+		t.Errorf("Expected alice to be second with value 2, got %+v", orderedPlayers[1])
+	}
+	if ordered[orderedPlayers[1]] != 2 {
+		t.Errorf("Expected alice to have value 2, got %+v", ordered[orderedPlayers[1]])
+	}
+	if orderedPlayers[2] != "carol" {
+		t.Errorf("Expected carol to be third with value 1, got %+v", orderedPlayers[2])
+	}
+	if ordered[orderedPlayers[2]] != 1 {
+		t.Errorf("Expected carol to have value 1, got %+v", ordered[orderedPlayers[2]])
 	}
 }
