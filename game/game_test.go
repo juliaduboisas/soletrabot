@@ -320,7 +320,7 @@ func TestOrderMapByValueSortsDescendingByCount(t *testing.T) {
 	input := map[string]int{"alice": 2, "bob": 5, "carol": 1}
 
 	// act
-	ordered := OrderMapByValue(input)
+	ordered := orderMapByValue(input)
 
 	// assert
 	var orderedPlayers []string
