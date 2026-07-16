@@ -143,7 +143,7 @@ func (G *Game) ShowLeaderboard() map[string]int {
 		leaderboard[player]++
 	}
 
-	orderedLeaderboard := OrderMapByValue(leaderboard)
+	orderedLeaderboard := orderMapByValue(leaderboard)
 
 	return orderedLeaderboard
 }
