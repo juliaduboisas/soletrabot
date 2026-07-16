@@ -143,28 +143,9 @@ func (G *Game) ShowLeaderboard() map[string]int {
 		leaderboard[player]++
 	}
 
-	orderedLeaderboard := G.OrderMapByValue(leaderboard)
+	orderedLeaderboard := OrderMapByValue(leaderboard)
 
 	return orderedLeaderboard
-}
-
-func (G *Game) OrderMapByValue(disordered map[string]int) map[string]int {
-	keys := make([]string, 0, len(disordered))
-	for k := range disordered {
-		keys = append(keys, k)
-	}
-
-	sort.Slice(keys, func(i, j int) bool {
-		return disordered[keys[i]] > disordered[keys[j]]
-	})
-
-	ordered := map[string]int{}
-
-	for _, k := range keys {
-		ordered[k] = disordered[k]
-	}
-
-	return ordered
 }
 
 func (G *Game) isValidWord(word string) bool {
@@ -190,4 +171,23 @@ func sortSizeFirst(s []string) []string {
 	})
 
 	return s
+}
+
+func OrderMapByValue(disordered map[string]int) map[string]int {
+	keys := make([]string, 0, len(disordered))
+	for k := range disordered {
+		keys = append(keys, k)
+	}
+
+	sort.Slice(keys, func(i, j int) bool {
+		return disordered[keys[i]] > disordered[keys[j]]
+	})
+
+	ordered := map[string]int{}
+
+	for _, k := range keys {
+		ordered[k] = disordered[k]
+	}
+
+	return ordered
 }
