@@ -236,6 +236,34 @@ func main() {
 		return nil
 	}, th.CommandEqual("count"))
 
+	// '/leaderboard' handler
+	bh.Handle(func(ctx *th.Context, update telego.Update) error {
+		leaderboard := game.ShowLeaderboard()
+
+		if len(leaderboard) == 0 {
+			_, _ = bot.SendMessage(ctx, tu.Messagef(
+				tu.ID(update.Message.Chat.ID),
+				"There are no words added yet! You can beat everyone to it :P",
+			))
+			return nil
+		}
+
+		rank := 1
+		message := "Ranking:"
+
+		for player, numWords := range leaderboard {
+			message += fmt.Sprintf("\n%d: %s - %d words", rank, player, numWords)
+			rank++
+		}
+
+		// Send message
+		_, _ = bot.SendMessage(ctx, tu.Messagef(
+			tu.ID(update.Message.Chat.ID),
+			"%v", message,
+		))
+		return nil
+	}, th.CommandEqual("leaderboard"))
+
 	// Start server for receiving requests from the Telegram
 	server := &http.Server{
 		Addr:    ":8080",
