@@ -173,7 +173,7 @@ func sortSizeFirst(s []string) []string {
 	return s
 }
 
-func OrderMapByValue(disordered map[string]int) map[string]int {
+func orderMapByValue(disordered map[string]int) map[string]int {
 	keys := make([]string, 0, len(disordered))
 	for k := range disordered {
 		keys = append(keys, k)
